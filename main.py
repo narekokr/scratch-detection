@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--epochs', type=int, default=10)
 parser.add_argument('--checkpoint', type=str)
-parser.add_argument('--load_optimizer', action=argparse.BooleanOptionalAction)
+parser.add_argument('--load_optimizer', action='store_true')
 args = parser.parse_args()
 batch_size = args.batch_size
 epochs = args.epochs
