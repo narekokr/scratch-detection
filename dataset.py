@@ -1,5 +1,4 @@
 import os
-import random
 
 from PIL import Image
 from torch.utils.data import Dataset
@@ -33,8 +32,7 @@ class ScratchDataset(Dataset):
 
     def __getitem__(self, index):
         damaged_path = os.path.join(self.damaged_dir, self.damaged_files[index])
-        mask_index = random.randint(0, self.masks_num - 1)
-        mask_path = os.path.join(self.mask_dir, self.mask_files[mask_index])
+        mask_path = os.path.join(self.mask_dir, self.mask_files[index])
 
         damaged_img = Image.open(damaged_path).convert('L')
         mask_img = Image.open(mask_path).convert('1')
