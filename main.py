@@ -63,7 +63,7 @@ for epoch in range(start_epoch, epochs):
         formatted_time = str(taken).split('.')[0]
         print('[%d, %5d] loss: %.3f, time taken:' % (epoch + 1, i + 1, loss.item()), formatted_time)
 
-    if epoch % 5 == 0:
+    if epoch % 10 == 0:
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
