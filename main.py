@@ -69,11 +69,11 @@ for epoch in range(start_epoch, epochs):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss.item(),
-        }, f'model{epoch}.pt')
+        }, f'checkpoints/model_{epoch}.pt')
 
 torch.save({
         'epoch': epochs,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'loss': loss.item(),
-    }, 'model.pt')
+    }, 'checkpoints/model.pt')
