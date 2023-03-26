@@ -28,7 +28,7 @@ model = nn.DataParallel(model)
 model.to(device)
 
 # Define the optimizer and loss function
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)
 criterion = nn.BCEWithLogitsLoss()
 
 # Define the dataset and dataloader
