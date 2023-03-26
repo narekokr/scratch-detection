@@ -14,11 +14,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--epochs', type=int, default=10)
 parser.add_argument('--checkpoint', type=str)
+parser.add_argument('--load_optimizer', action=argparse.BooleanOptionalAction)
 args = parser.parse_args()
 batch_size = args.batch_size
 epochs = args.epochs
 checkpoint = args.checkpoint
-
+load_optimizer = args.load_optimizer
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Define the model
@@ -28,7 +29,7 @@ model.to(device)
 
 # Define the optimizer and loss function
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-criterion = DiceLoss()
+criterion = nn.BCEWithLogitsLoss()
 
 # Define the dataset and dataloader
 dataset = ScratchDataset(damaged_dir='train_data/imgs', mask_dir='train_data/masks', image_size=(256, 256))
@@ -40,7 +41,7 @@ start_epoch = 0
 if checkpoint:
     checkpoint = torch.load(checkpoint, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict']) if load_optimizer else None
     start_epoch = checkpoint['epoch']
     model.eval()
     model.train()
