@@ -28,7 +28,8 @@ model = nn.DataParallel(model)
 model.to(device)
 
 # Define the optimizer and loss function
-optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)
+optimizer = optim.AdamW(model.parameters(), lr=0.01, weight_decay=0.01)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 criterion = nn.BCEWithLogitsLoss()
 
 # Define the dataset and dataloader
@@ -42,6 +43,7 @@ if checkpoint:
     checkpoint = torch.load(checkpoint, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict']) if load_optimizer else None
+    scheduler.load_state_dict(checkpoint['scheduler_state_dict']) if load_optimizer else None
     start_epoch = checkpoint['epoch']
     model.eval()
     model.train()
@@ -70,6 +72,7 @@ for epoch in range(start_epoch, epochs):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss.item(),
+            'scheduler_state_dict': scheduler.state_dict()
         }, f'checkpoints/model_{epoch}.pt')
 
 torch.save({
@@ -77,4 +80,5 @@ torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'loss': loss.item(),
-    }, 'checkpoints/model.pt')
+        'scheduler_state_dict': scheduler.state_dict()
+}, 'checkpoints/model.pt')
