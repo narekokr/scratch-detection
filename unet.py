@@ -78,8 +78,7 @@ class Net(nn.Module):
                 *[nn.ReflectionPad2d(1), nn.Conv2d(prev_channels, out_channels, kernel_size=3)]
             )
 
-        if sync_bn:
-            self = DataParallel(self)
+        self = DataParallel(self)
 
     def forward(self, x):
         x = self.first(x)
