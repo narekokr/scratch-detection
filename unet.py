@@ -2,26 +2,22 @@ import torch
 from torch import nn
 from torch.nn import DataParallel
 
-from antialiasing import Downsample
+from downsample import Downsample
 
 
-class Net(nn.Module):
+class Network(nn.Module):
     def __init__(
         self,
         in_channels=1,
         out_channels=1,
-        depth=5,
+        depth=4,
         conv_num=2,
         wf=6,
         padding=True,
         batch_norm=True,
-        up_mode="upsample",
-        with_tanh=False,
-        sync_bn=True,
         antialiasing=True,
     ):
         super().__init__()
-        assert up_mode in ("upconv", "upsample")
         self.padding = padding
         self.depth = depth - 1
         prev_channels = in_channels
@@ -34,49 +30,28 @@ class Net(nn.Module):
         self.down_path = nn.ModuleList()
         self.down_sample = nn.ModuleList()
         for i in range(depth):
-            if antialiasing and depth > 0:
-                self.down_sample.append(
-                    nn.Sequential(
-                        *[
-                            nn.ReflectionPad2d(1),
-                            nn.Conv2d(prev_channels, prev_channels, kernel_size=3, stride=1, padding=0),
-                            nn.BatchNorm2d(prev_channels),
-                            nn.LeakyReLU(0.2, True),
-                            Downsample(channels=prev_channels, stride=2),
-                        ]
-                    )
+            self.down_sample.append(
+                nn.Sequential(
+                    nn.ReflectionPad2d(1),
+                    nn.Conv2d(prev_channels, prev_channels, kernel_size=3, stride=1, padding=0),
+                    nn.BatchNorm2d(prev_channels),
+                    nn.LeakyReLU(0.2, True),
+                    Downsample(channels=prev_channels, stride=2),
                 )
-            else:
-                self.down_sample.append(
-                    nn.Sequential(
-                        *[
-                            nn.ReflectionPad2d(1),
-                            nn.Conv2d(prev_channels, prev_channels, kernel_size=4, stride=2, padding=0),
-                            nn.BatchNorm2d(prev_channels),
-                            nn.LeakyReLU(0.2, True),
-                        ]
-                    )
-                )
-            self.down_path.append(
-                UNetConvBlock(conv_num, prev_channels, 2 ** (wf + i + 1), padding, batch_norm)
             )
+            self.down_path.append(UNetConvBlock(conv_num, prev_channels, 2 ** (wf + i + 1), padding, batch_norm))
             prev_channels = 2 ** (wf + i + 1)
 
         self.up_path = nn.ModuleList()
         for i in reversed(range(depth)):
             self.up_path.append(
-                UNetUpBlock(conv_num, prev_channels, 2 ** (wf + i), up_mode, padding, batch_norm)
+                UNetUpBlock(conv_num, prev_channels, 2 ** (wf + i), padding, batch_norm)
             )
             prev_channels = 2 ** (wf + i)
 
-        if with_tanh:
-            self.last = nn.Sequential(
-                *[nn.ReflectionPad2d(1), nn.Conv2d(prev_channels, out_channels, kernel_size=3), nn.Tanh()]
-            )
-        else:
-            self.last = nn.Sequential(
-                *[nn.ReflectionPad2d(1), nn.Conv2d(prev_channels, out_channels, kernel_size=3)]
-            )
+        self.last = nn.Sequential(
+            *[nn.ReflectionPad2d(1), nn.Conv2d(prev_channels, out_channels, kernel_size=3)]
+        )
 
         self = DataParallel(self)
 
@@ -116,15 +91,12 @@ class UNetConvBlock(nn.Module):
 
 
 class UNetUpBlock(nn.Module):
-    def __init__(self, conv_num, in_size, out_size, up_mode, padding, batch_norm):
+    def __init__(self, conv_num, in_size, out_size, padding, batch_norm):
         super(UNetUpBlock, self).__init__()
-        if up_mode == "upconv":
-            self.up = nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2)
-        elif up_mode == "upsample":
-            self.up = nn.Sequential(
-                nn.Upsample(mode="bilinear", scale_factor=2, align_corners=False),
-                nn.ReflectionPad2d(1),
-                nn.Conv2d(in_size, out_size, kernel_size=3, padding=0),
+        self.up = nn.Sequential(
+            nn.Upsample(mode="bilinear", scale_factor=2, align_corners=False),
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(in_size, out_size, kernel_size=3, padding=0),
             )
 
         self.conv_block = UNetConvBlock(conv_num, in_size, out_size, padding, batch_norm)

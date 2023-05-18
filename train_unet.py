@@ -9,9 +9,7 @@ import torch.optim as optim
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 from dataset import ScratchDataset
-from loss import DiceLoss
-from model import UNet
-from unet import Net
+from unet import Network
 from util import EarlyStopper
 
 parser = argparse.ArgumentParser()
@@ -27,7 +25,7 @@ load_optimizer = args.load_optimizer
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Define the model
-model = Net(
+model = Network(
     in_channels=1,
     out_channels=1,
     depth=4,
@@ -58,7 +56,6 @@ if checkpoint:
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict']) if load_optimizer else None
     scheduler.load_state_dict(checkpoint['scheduler_state_dict']) if load_optimizer else None
-    start_epoch = checkpoint['epoch']
     model.eval()
     model.train()
 # Train the model

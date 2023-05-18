@@ -6,8 +6,10 @@ import torch.nn.functional as F
 
 
 class Downsample(nn.Module):
-    def __init__(self, pad_type="reflect", filt_size=3, stride=2, channels=None, pad_off=0):
+
+    def __init__(self, filt_size=3, stride=2, channels=None, pad_off=0):
         super(Downsample, self).__init__()
+
         self.filt_size = filt_size
         self.pad_off = pad_off
         self.pad_sizes = [
@@ -20,6 +22,7 @@ class Downsample(nn.Module):
         self.stride = stride
         self.off = int((self.stride - 1) / 2.0)
         self.channels = channels
+
         a = np.array([1.0, 2.0, 1.0])
 
         filt = torch.Tensor(a[:, None] * a[None, :])
